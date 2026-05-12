@@ -59,10 +59,13 @@ function formatMovie(m: Record<string, unknown>): TmdbMovie {
 }
 
 export async function fetchTrending(): Promise<TmdbMovie[]> {
-  const data = await tmdbGet("/trending/movie/week");
-  return data.results
+  const [p1, p2] = await Promise.all([
+    tmdbGet("/trending/movie/week", { page: "1" }),
+    tmdbGet("/trending/movie/week", { page: "2" }),
+  ]);
+  return [...p1.results, ...p2.results]
     .filter((m: Record<string, unknown>) => m.poster_path)
-    .slice(0, 12)
+    .slice(0, 40)
     .map(formatMovie);
 }
 
