@@ -136,7 +136,7 @@ function MovieGrid({ movies, onOpen, onToggle, loading }: {
 function TrailerModal({ movie, onClose }: { movie: Movie; onClose: () => void }) {
   const [trailerUrl, setTrailerUrl] = useState<string | null>(movie.trailer);
   const [loadingTrailer, setLoadingTrailer] = useState(!movie.trailer);
-  const [mode, setMode] = useState<"trailer" | "watch">("trailer");
+  const [mode, setMode] = useState<"trailer" | "watch">("watch");
 
   useEffect(() => {
     if (!movie.trailer) {
