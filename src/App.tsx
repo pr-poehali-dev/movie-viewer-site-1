@@ -255,11 +255,32 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-function HomePage({ movies, onOpen, onToggle, loading }: {
+function LoadMoreButton({ onClick, loading }: { onClick: () => void; loading: boolean }) {
+  return (
+    <div className="flex justify-center mt-10">
+      <button
+        onClick={onClick}
+        disabled={loading}
+        className="flex items-center gap-2 border border-white/20 text-white/50 hover:border-gold hover:text-gold px-8 py-3 text-xs uppercase tracking-widest transition-colors disabled:opacity-40"
+      >
+        {loading ? (
+          <div className="w-4 h-4 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+        ) : (
+          <Icon name="ChevronDown" size={14} />
+        )}
+        {loading ? "Загрузка..." : "Загрузить ещё"}
+      </button>
+    </div>
+  );
+}
+
+function HomePage({ movies, onOpen, onToggle, loading, onLoadMore, loadingMore }: {
   movies: Movie[];
   onOpen: (m: Movie) => void;
   onToggle: (id: number, key: "saved" | "watched") => void;
   loading: boolean;
+  onLoadMore: () => void;
+  loadingMore: boolean;
 }) {
   const featured = movies[0];
   const featuredImg = featured?.backdrop || featured?.img || FALLBACK_IMAGES[1];
@@ -321,16 +342,19 @@ function HomePage({ movies, onOpen, onToggle, loading }: {
       <div className="px-4 md:px-10">
         <SectionHeader title="В тренде на этой неделе" />
         <MovieGrid movies={movies} onOpen={onOpen} onToggle={onToggle} loading={loading} />
+        {!loading && <LoadMoreButton onClick={onLoadMore} loading={loadingMore} />}
       </div>
     </div>
   );
 }
 
-function CatalogPage({ movies, onOpen, onToggle, loading }: {
+function CatalogPage({ movies, onOpen, onToggle, loading, onLoadMore, loadingMore }: {
   movies: Movie[];
   onOpen: (m: Movie) => void;
   onToggle: (id: number, key: "saved" | "watched") => void;
   loading: boolean;
+  onLoadMore: () => void;
+  loadingMore: boolean;
 }) {
   const [filter, setFilter] = useState("Все");
   const genres = ["Все", ...Array.from(new Set(movies.map(m => m.genre))).slice(0, 8)];
@@ -362,6 +386,7 @@ function CatalogPage({ movies, onOpen, onToggle, loading }: {
       )}
 
       <MovieGrid movies={filtered} onOpen={onOpen} onToggle={onToggle} loading={loading} />
+      {!loading && <LoadMoreButton onClick={onLoadMore} loading={loadingMore} />}
     </div>
   );
 }
@@ -613,16 +638,31 @@ export default function App() {
   const [page, setPage] = useState<Page>("home");
   const [rawMovies, setRawMovies] = useState<TmdbMovie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [activeMovie, setActiveMovie] = useState<Movie | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [movies, toggleMovie] = useLocalMovies(rawMovies);
 
   useEffect(() => {
-    fetchTrending()
+    fetchTrending(1)
       .then(setRawMovies)
       .catch(() => setRawMovies([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    try {
+      const next = await fetchTrending(currentPage + 1);
+      setRawMovies(prev => {
+        const ids = new Set(prev.map(m => m.id));
+        return [...prev, ...next.filter(m => !ids.has(m.id))];
+      });
+      setCurrentPage(p => p + 1);
+    } catch (e) { console.error(e); }
+    setLoadingMore(false);
+  }, [currentPage]);
 
   const handleOpen = useCallback((m: Movie) => setActiveMovie(m), []);
 
@@ -675,8 +715,8 @@ export default function App() {
       )}
 
       <main className="pt-16 pb-20 md:pb-8">
-        {page === "home" && <HomePage movies={movies} onOpen={handleOpen} onToggle={toggleMovie} loading={loading} />}
-        {page === "catalog" && <CatalogPage movies={movies} onOpen={handleOpen} onToggle={toggleMovie} loading={loading} />}
+        {page === "home" && <HomePage movies={movies} onOpen={handleOpen} onToggle={toggleMovie} loading={loading} onLoadMore={loadMore} loadingMore={loadingMore} />}
+        {page === "catalog" && <CatalogPage movies={movies} onOpen={handleOpen} onToggle={toggleMovie} loading={loading} onLoadMore={loadMore} loadingMore={loadingMore} />}
         {page === "my" && <MyMoviesPage movies={movies} onOpen={handleOpen} onToggle={toggleMovie} />}
         {page === "collections" && <CollectionsPage movies={movies} onOpen={handleOpen} onToggle={toggleMovie} />}
         {page === "search" && <SearchPage globalMovies={movies} onOpen={handleOpen} onToggle={toggleMovie} />}
