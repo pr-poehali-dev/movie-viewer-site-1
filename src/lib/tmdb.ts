@@ -70,10 +70,13 @@ export async function fetchTrending(): Promise<TmdbMovie[]> {
 }
 
 export async function searchMovies(query: string): Promise<TmdbMovie[]> {
-  const data = await tmdbGet("/search/movie", { query });
-  return data.results
+  const [p1, p2] = await Promise.all([
+    tmdbGet("/search/movie", { query, page: "1" }),
+    tmdbGet("/search/movie", { query, page: "2" }),
+  ]);
+  return [...p1.results, ...p2.results]
     .filter((m: Record<string, unknown>) => m.poster_path)
-    .slice(0, 12)
+    .slice(0, 40)
     .map(formatMovie);
 }
 

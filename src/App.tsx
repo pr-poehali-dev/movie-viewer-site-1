@@ -447,7 +447,7 @@ function CollectionsPage({ movies, onOpen, onToggle }: {
       {movies.length > 0 && (
         <>
           <SectionHeader title="Рекомендованные" />
-          <MovieGrid movies={movies.slice(0, 6)} onOpen={onOpen} onToggle={onToggle} />
+          <MovieGrid movies={movies.slice(0, 20)} onOpen={onOpen} onToggle={onToggle} />
         </>
       )}
     </div>
