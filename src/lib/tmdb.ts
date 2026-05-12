@@ -6,7 +6,8 @@ const TOKEN = import.meta.env.VITE_TMDB_TOKEN as string;
 
 async function tmdbGet(path: string, params: Record<string, string> = {}) {
   const qs = new URLSearchParams({ language: "ru-RU", ...params }).toString();
-  const res = await fetch(`${TMDB_BASE}${path}?${qs}`, {
+  const targetUrl = encodeURIComponent(`${TMDB_BASE}${path}?${qs}`);
+  const res = await fetch(`https://corsproxy.io/?url=${targetUrl}`, {
     headers: { Authorization: `Bearer ${TOKEN}`, Accept: "application/json" },
   });
   if (!res.ok) throw new Error(`TMDB ${res.status}`);
