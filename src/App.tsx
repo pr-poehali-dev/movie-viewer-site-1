@@ -136,6 +136,7 @@ function MovieGrid({ movies, onOpen, onToggle, loading }: {
 function TrailerModal({ movie, onClose }: { movie: Movie; onClose: () => void }) {
   const [trailerUrl, setTrailerUrl] = useState<string | null>(movie.trailer);
   const [loadingTrailer, setLoadingTrailer] = useState(!movie.trailer);
+  const [mode, setMode] = useState<"trailer" | "watch">("trailer");
 
   useEffect(() => {
     if (!movie.trailer) {
@@ -172,29 +173,61 @@ function TrailerModal({ movie, onClose }: { movie: Movie; onClose: () => void })
           </button>
         </div>
 
+        <div className="flex gap-2 mb-3 px-1">
+          <button
+            onClick={() => setMode("trailer")}
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded transition-colors ${mode === "trailer" ? "bg-gold text-black font-medium" : "border border-white/20 text-white/50 hover:text-white"}`}
+          >
+            <Icon name="PlayCircle" size={13} />
+            Трейлер
+          </button>
+          <button
+            onClick={() => setMode("watch")}
+            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded transition-colors ${mode === "watch" ? "bg-gold text-black font-medium" : "border border-white/20 text-white/50 hover:text-white"}`}
+          >
+            <Icon name="Tv" size={13} />
+            Смотреть фильм
+          </button>
+        </div>
+
         <div className="relative bg-black rounded overflow-hidden aspect-video">
-          {loadingTrailer && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-            </div>
-          )}
-          {!loadingTrailer && trailerUrl ? (
+          {mode === "watch" ? (
             <iframe
               className="trailer-frame"
-              src={`${trailerUrl}?autoplay=1`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              src={`https://kinobox.tv/video?tmdb=${movie.id}&autoplay=1`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
             />
-          ) : !loadingTrailer && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-              <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
-              <Icon name="VideoOff" size={32} className="text-white/30 relative z-10" />
-              <p className="text-white/40 text-sm relative z-10">Трейлер недоступен</p>
-            </div>
+          ) : (
+            <>
+              {loadingTrailer && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                </div>
+              )}
+              {!loadingTrailer && trailerUrl ? (
+                <iframe
+                  className="trailer-frame"
+                  src={`${trailerUrl}?autoplay=1`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : !loadingTrailer && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                  <Icon name="VideoOff" size={32} className="text-white/30 relative z-10" />
+                  <p className="text-white/40 text-sm relative z-10">Трейлер недоступен</p>
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {movie.overview && (
+        {mode === "watch" && (
+          <p className="text-white/30 text-[10px] mt-2 px-1">Контент предоставляется сервисом Kinobox. Доступность фильма зависит от источников.</p>
+        )}
+
+        {movie.overview && mode === "trailer" && (
           <p className="text-white/40 text-xs leading-relaxed mt-3 px-1 line-clamp-2">{movie.overview}</p>
         )}
 
