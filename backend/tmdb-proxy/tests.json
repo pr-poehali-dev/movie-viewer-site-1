@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "Trending movies",
+      "method": "GET",
+      "path": "/?path=/trending/movie/week&language=ru-RU",
+      "expectedStatus": 200,
+      "expectedBody": {"results": []},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
